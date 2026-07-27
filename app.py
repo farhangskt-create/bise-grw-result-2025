@@ -83,7 +83,7 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     st.image("https://upload.wikimedia.org/wikipedia/en/2/23/Board_of_Intermediate_and_Secondary_Education%2C_Gujranwala.png", use_container_width=True)
 
-st.markdown("<h3 style='text-align: center; color: #1e293b; margin-top: -10px;'>SSC First Annual Examination 2026 pat II</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center; color: #1e293b; margin-top: -10px;'>SSC Part II First Annual Examination 2026 </h3>", unsafe_allow_html=True)
 
 # ==========================
 # LOAD INDEX
