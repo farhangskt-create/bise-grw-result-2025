@@ -8,7 +8,7 @@ import urllib.parse
 
 APP_URL = "https://bise-grw-result-2026-wbhibjmejwpopvc6mjf9yf.streamlit.app"
 st.set_page_config(
-    page_title="BISE Gujranwala SSC Result 2025",
+    page_title="BISE Gujranwala SSC part II First Annual Result 2026",
     page_icon="🎓",
     layout="centered"
 )
