@@ -220,8 +220,8 @@ st.markdown("""
 <p><strong>👨‍💻 Developed by M. Farhan Iqbal</strong></p>
 <p>We wish every student success in their future endeavors. ❤️</p>
 <p style="font-size: 12px; color: #999;">
-⚠️ Disclaimer: This is an unofficial result search tool based on the published gazette. 
-Please verify your result from the official BISE Gujranwala records if required.
+⚠️ Disclaimer: This is a result search tool based on the published gazette BISE Gujranwala. 
+Please verify your result detail from the official BISE Gujranwala records if required.
 </p>
 </div>
 """, unsafe_allow_html=True)
