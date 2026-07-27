@@ -83,7 +83,7 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     st.image("https://upload.wikimedia.org/wikipedia/en/2/23/Board_of_Intermediate_and_Secondary_Education%2C_Gujranwala.png", use_container_width=True)
 
-st.markdown("<h3 style='text-align: center; color: #1e293b; margin-top: -10px;'>SSC First Annual Examination 2025</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center; color: #1e293b; margin-top: -10px;'>SSC First Annual Examination 2026 pat II</h3>", unsafe_allow_html=True)
 
 # ==========================
 # LOAD INDEX
@@ -183,7 +183,7 @@ if search_btn:
         # SHARE & COPY RESULT
         # ==========================
         st.markdown("<br>", unsafe_allow_html=True)
-        share_message = f"""🎓 *BISE Gujranwala SSC First Annual Examination 2025*
+        share_message = f"""🎓 *BISE Gujranwala SSC part II First Annual Examination 2026*
 
 👤 *Name:* {student_name}
 🎫 *Roll Number:* {roll}
@@ -192,7 +192,7 @@ if search_btn:
 🔍 Check your result online:
 {APP_URL}
 
-Developed by M. Farhan Iqbal"""
+Developed by Sir M. Farhan Iqbal"""
 
         whatsapp_url = "https://wa.me/?text=" + urllib.parse.quote(share_message)
 
@@ -207,7 +207,7 @@ Developed by M. Farhan Iqbal"""
 
     else:
         st.error("❌ No record found for this Roll Number.")
-        st.info("Ensure the roll number is 6 digits long and belongs to the current SSC 2025 examination.")
+        st.info("Ensure the roll number is 6 digits long and belongs to the current SSC 2026 examination.")
 
 # ==========================
 # FOOTER
