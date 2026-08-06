@@ -1,122 +1,5 @@
-import streamlit as st
-import json
-import urllib.parse
-
 # ==========================
-# APP SETTINGS
-# ==========================
-
-APP_URL = "https://bise-grw-result-2026-wbhibjmejwpopvc6mjf9yf.streamlit.app"
-st.set_page_config(
-    page_title="BISE Gujranwala SSC part II First Annual Result 2026",
-    page_icon="🎓",
-    layout="centered"
-)
-
-# ==========================
-# CUSTOM CSS
-# ==========================
-
-st.markdown("""
-<style>
-.main {
-    padding-top: 10px;
-}
-.stButton>button {
-    width: 100%;
-    height: 50px;
-    border-radius: 12px;
-    font-size: 18px;
-    font-weight: bold;
-    background-color: #1565C0;
-    color: white;
-    border: none;
-}
-.stButton>button:hover {
-    background-color: #0D47A1;
-    color: white;
-}
-.stTextInput input {
-    border-radius: 10px;
-    text-align: center;
-    font-size: 20px;
-    letter-spacing: 2px;
-    font-weight: bold;
-}
-.result-card {
-    background: #F8FAFC;
-    border: 2px solid #2196F3;
-    border-radius: 15px;
-    padding: 30px;
-    margin-top: 20px;
-    box-shadow: 0px 8px 24px rgba(0,0,0,0.1);
-}
-.info-label {
-    color: #64748b;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: -10px;
-}
-.info-value {
-    font-size: 22px;
-    font-weight: bold;
-    color: #1e293b;
-    margin-bottom: 15px;
-}
-.footer {
-    text-align: center;
-    color: #666;
-    margin-top: 40px;
-    font-size: 14px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ==========================
-# HEADER & LOGO
-# ==========================
-
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.image("https://upload.wikimedia.org/wikipedia/en/2/23/Board_of_Intermediate_and_Secondary_Education%2C_Gujranwala.png", use_container_width=True)
-
-st.markdown("<h3 style='text-align: center; color: #1e293b; margin-top: -10px;'>SSC Part II First Annual Examination 2026 </h3>", unsafe_allow_html=True)
-
-# ==========================
-# LOAD INDEX
-# ==========================
-
-@st.cache_data(show_spinner=False)
-def load_index():
-    with open("index.json", "r", encoding="utf-8") as f:
-        return json.load(f)
-
-try:
-    with st.spinner("Initializing Database..."):
-        pages = load_index()
-except Exception as e:
-    st.error(f"Unable to load index.json\n\n{e}")
-    st.stop()
-
-# ==========================
-# SEARCH SECTION
-# ==========================
-
-st.divider()
-
-roll = st.text_input(
-    "🔢 Enter your 6-Digit Roll Number below",
-    max_chars=6,
-    placeholder="e.g. 531214"
-)
-
-search_btn = st.button("🔍 Search Result")
-
-# ==========================
-# SEARCH LOGIC
+# SEARCH LOGIC (Clean & Fixed)
 # ==========================
 
 if search_btn:
@@ -131,8 +14,8 @@ if search_btn:
         st.stop()
 
     found = False
-    student_name = ""
-    student_result = ""
+    student_name = "Not Specified"
+    student_result = "Result Data Found"
     page_number = ""
 
     with st.spinner("Searching Student Record..."):
@@ -144,11 +27,25 @@ if search_btn:
                 
                 for i in range(len(lines)):
                     if roll in lines[i]:
-                        if i + 1 < len(lines):
-                            student_name = lines[i + 1]
-                        if i + 2 < len(lines):
-                            student_result = lines[i + 2]
                         found = True
+                        # Agli lines ko dhoond kar name aur result alag karne ka smart tareeqa
+                        collected_lines = []
+                        for j in range(i + 1, min(i + 5, len(lines))):
+                            next_line = lines[j]
+                            # Agar agli line mein koi aur 6-digit roll number ya page header aa jaye toh rok dein
+                            if next_line.isdigit() and len(next_line) == 6:
+                                break
+                            collected_lines.append(next_line)
+                        
+                        if collected_lines:
+                            # Pehli valid text line ko name maan lein jo digits par mushtamil na ho
+                            for l in collected_lines:
+                                if not any(char.isdigit() for char in l) and "PII" not in l and "PS" not in l:
+                                    student_name = l
+                                    break
+                            
+                            # Aakhri ya marks wali line ko result maan lein
+                            student_result = " ".join(collected_lines[-2:]) if len(collected_lines) >= 2 else collected_lines[0]
                         break
                 if found:
                     break
@@ -177,10 +74,6 @@ if search_btn:
 </div>
 """, unsafe_allow_html=True)
 
-        # ==========================
-        # SHARE & COPY RESULT
-        # ==========================
-        st.markdown("<br>", unsafe_allow_html=True)
         share_message = f"""🎓 *BISE Gujranwala SSC part II First Annual Examination 2026*
 
 👤 *Name:* {student_name}
@@ -206,20 +99,3 @@ Developed by Sir M. Farhan Iqbal"""
     else:
         st.error("❌ No record found for this Roll Number.")
         st.info("Ensure the roll number is 6 digits long and belongs to the current SSC 2026 examination.")
-
-# ==========================
-# FOOTER
-# ==========================
-
-st.divider()
-
-st.markdown("""
-<div class="footer">
-<p><strong>👨‍💻 Developed by M. Farhan Iqbal</strong></p>
-<p>We wish every student success in their future endeavors. ❤️</p>
-<p style="font-size: 12px; color: #999;">
-⚠️ Disclaimer: This is an Unofficial result search tool based on the published gazette BISE Gujranwala. 
-Please verify your result detail from the official BISE Gujranwala records if required.
-</p>
-</div>
-""", unsafe_allow_html=True)
