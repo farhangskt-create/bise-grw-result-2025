@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import urllib.parse
+import re
 
 # ==========================
 # APP SETTINGS
@@ -107,91 +108,66 @@ except Exception as e:
 
 st.divider()
 
-roll = st.text_input(
-    "🔢 Enter your 6-Digit Roll Number below",
+search_query = st.text_input(
+    "🔢 Enter 6-Digit Roll Number or School Code (e.g. 361084)",
     max_chars=6,
-    placeholder="e.g. 531214"
+    placeholder="e.g. 361084"
 )
 
-search_btn = st.button("🔍 Search Result")
+search_btn = st.button("🔍 Search Record")
 
 # ==========================
-# SEARCH LOGIC (FIXED)
+# SEARCH LOGIC
 # ==========================
 
 if search_btn:
-    roll = roll.strip()
+    query = search_query.strip()
 
-    if not roll:
-        st.warning("Please enter your Roll Number.")
+    if not query:
+        st.warning("Please enter a Roll Number or School Code.")
         st.stop()
 
-    if not (roll.isdigit() and len(roll) == 6):
+    if not (query.isdigit() and len(query) == 6):
         st.error("Invalid input. Please enter exactly 6 digits.")
         st.stop()
 
     found = False
-    student_name = "Not Available"
-    student_result = "Not Available"
     page_number = ""
+    matched_block = ""
 
-    with st.spinner("Searching Student Record..."):
+    with st.spinner("Searching Gazette Database..."):
         for page in pages:
             text = page["text"]
-            if roll in text:
+            if query in text:
                 page_number = page['page']
-                lines = [line.strip() for line in text.splitlines() if line.strip()]
+                found = True
                 
-                for i in range(len(lines)):
-                    # Exact ya substring match jahan roll number mojood ho
-                    if roll in lines[i]:
-                        found = True
-                        
-                        # Agli lines ko check karne ka secure loop
-                        candidate_lines = lines[i+1 : i+6]
-                        
-                        # Name aur marks extract karne ke liye filtering
-                        valid_texts = []
-                        for cl in candidate_lines:
-                            # Agar agla roll number ya codes aa jayein toh stop karein
-                            if cl.isdigit() and len(cl) == 6:
-                                break
-                            if any(sub in cl for sub in ["PS", "MTH", "PHY", "CH", "BIO", "ENG", "UR", "ISL", "PII:", "PI:"]):
-                                continue
-                            if len(cl) > 2 and not cl.isdigit():
-                                valid_texts.append(cl)
-                        
-                        if len(valid_texts) >= 1:
-                            student_name = valid_texts[0]
-                        if len(valid_texts) >= 2:
-                            student_result = valid_texts[1]
-                        elif candidate_lines:
-                            student_result = candidate_lines[-1]
+                # Extract surrounding text block for clarity
+                lines = [line.strip() for line in text.splitlines() if line.strip()]
+                for idx, line in enumerate(lines):
+                    if query in line:
+                        block_lines = lines[max(0, idx-2):min(len(lines), idx+15)]
+                        matched_block = "\n".join(block_lines)
                         break
-                if found:
-                    break
+                break
 
     # ==========================
-    # DISPLAY SINGLE STUDENT RESULT
+    # DISPLAY RESULT
     # ==========================
     if found:
-        st.success("✅ Student Record Found!")
+        st.success("✅ Record found successfully!")
         st.balloons()
-
-        result_color = "red" if "FAIL" in student_result.upper() else "green"
 
         st.markdown(f"""
 <div class="result-card">
-<h3 style="text-align:center;color:#1565C0;margin-top:0;">📋 STUDENT RESULT CARD</h3>
+<h3 style="text-align:center;color:#1565C0;margin-top:0;">📋 GAZETTE RECORD FOUND</h3>
 <hr>
-<p class="info-label">Roll Number</p>
-<p class="info-value">{roll}</p>
-<p class="info-label">Student Name</p>
-<p class="info-value">{student_name}</p>
-<p class="info-label">Marks / Status</p>
-<p class="info-value" style="color:{result_color}; font-size: 26px;">{student_result}</p>
+<p class="info-label">Searched Query (Roll No / School Code)</p>
+<p class="info-value">{query}</p>
 <p class="info-label">Gazette Reference</p>
 <p class="info-value" style="font-size: 16px;">Page {page_number}</p>
+<p class="info-label">Extracted Text Data</p>
+<pre style="background: #fff; padding: 12px; border-radius: 8px; font-size: 13px; max-height: 300px; overflow-y: auto;">{matched_block}</pre>
 </div>
 """, unsafe_allow_html=True)
 
@@ -200,12 +176,10 @@ if search_btn:
         # ==========================
         st.markdown("<br>", unsafe_allow_html=True)
         share_message = f"""🎓 *BISE Gujranwala SSC part II First Annual Examination 2026*
+🎫 *Target ID / Roll No:* {query}
+📄 *Gazette Page:* {page_number}
 
-👤 *Name:* {student_name}
-🎫 *Roll Number:* {roll}
-🏆 *Result / Marks:* {student_result}
-
-🔍 Check result online:
+🔍 Check results online:
 {APP_URL}
 
 Developed by Sir M. Farhan Iqbal"""
@@ -222,8 +196,8 @@ Developed by Sir M. Farhan Iqbal"""
             st.code(share_message, language="markdown")
 
     else:
-        st.error("❌ No record found for this Roll Number.")
-        st.info("Ensure the roll number is 6 digits long and belongs to the current SSC 2026 examination.")
+        st.error("❌ No record found for this number.")
+        st.info("Ensure the entered 6-digit code exists in the current SSC 2026 examination gazette index.")
 
 # ==========================
 # FOOTER
