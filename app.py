@@ -1,8 +1,6 @@
-# ==========================
 import streamlit as st
 import json
 import urllib.parse
-import re
 
 # ==========================
 # APP SETTINGS
@@ -10,7 +8,7 @@ import re
 
 APP_URL = "https://bise-grw-result-2026-wbhibjmejwpopvc6mjf9yf.streamlit.app"
 st.set_page_config(
-    page_title="BISE Gujranwala SSC part II First Annual Examination 2026",
+    page_title="BISE Gujranwala SSC part II First Annual Result 2026",
     page_icon="🎓",
     layout="centered"
 )
@@ -118,7 +116,7 @@ roll = st.text_input(
 search_btn = st.button("🔍 Search Result")
 
 # ==========================
-# SEARCH LOGIC
+# SEARCH LOGIC (FIXED)
 # ==========================
 
 if search_btn:
@@ -145,35 +143,30 @@ if search_btn:
                 lines = [line.strip() for line in text.splitlines() if line.strip()]
                 
                 for i in range(len(lines)):
+                    # Exact ya substring match jahan roll number mojood ho
                     if roll in lines[i]:
                         found = True
-                        # Collect next few lines safely
-                        sub_lines = []
-                        for j in range(i + 1, min(i + 6, len(lines))):
-                            next_line = lines[j]
-                            if next_line.isdigit() and len(next_line) == 6:
-                                break
-                            sub_lines.append(next_line)
                         
-                        # Filter out subject abbreviations or codes to isolate the actual student name
-                        valid_names = []
-                        for sl in sub_lines:
-                            # Skip if line contains common subject markers or only short codes
-                            if any(sub in sl for sub in ["PS", "MTH", "PHY", "CH", "BIO", "ENG", "UR", "ISL", "PII:", "PI:"]):
+                        # Agli lines ko check karne ka secure loop
+                        candidate_lines = lines[i+1 : i+6]
+                        
+                        # Name aur marks extract karne ke liye filtering
+                        valid_texts = []
+                        for cl in candidate_lines:
+                            # Agar agla roll number ya codes aa jayein toh stop karein
+                            if cl.isdigit() and len(cl) == 6:
+                                break
+                            if any(sub in cl for sub in ["PS", "MTH", "PHY", "CH", "BIO", "ENG", "UR", "ISL", "PII:", "PI:"]):
                                 continue
-                            if len(sl) > 2 and not sl.isdigit():
-                                valid_names.append(sl)
+                            if len(cl) > 2 and not cl.isdigit():
+                                valid_texts.append(cl)
                         
-                        if valid_names:
-                            student_name = valid_names[0]
-                        
-                        # Look for marks or result status in the remaining lines
-                        for sl in sub_lines:
-                            if sl.isdigit() or "FAIL" in sl.upper() or "ABSENT" in sl.upper() or "A" == sl:
-                                student_result = sl
-                                break
-                        if student_result == "Not Available" and sub_lines:
-                            student_result = sub_lines[-1]
+                        if len(valid_texts) >= 1:
+                            student_name = valid_texts[0]
+                        if len(valid_texts) >= 2:
+                            student_result = valid_texts[1]
+                        elif candidate_lines:
+                            student_result = candidate_lines[-1]
                         break
                 if found:
                     break
