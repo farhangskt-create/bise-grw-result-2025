@@ -116,7 +116,7 @@ roll = st.text_input(
 search_btn = st.button("🔍 Search Result")
 
 # ==========================
-# SEARCH LOGIC
+# SEARCH LOGIC (Updated & Flexible)
 # ==========================
 
 if search_btn:
@@ -131,29 +131,73 @@ if search_btn:
         st.stop()
 
     found = False
-    student_name = ""
-    student_result = ""
+    student_name = "Not Available in Index Line"
+    student_result = "Check Gazette Page"
     page_number = ""
+    matched_block = ""
 
     with st.spinner("Searching Result..."):
         for page in pages:
-            lines = [
-                line.strip()
-                for line in page["text"].splitlines()
-                if line.strip()
-            ]
-
-            for i in range(len(lines) - 2):
-                if lines[i] == roll:
-                    student_name = lines[i + 1]
-                    student_result = lines[i + 2]
-                    page_number = page['page']
-                    found = True
-                    break
-
-            if found:
+            text = page["text"]
+            # Check karein ke roll number page ke text mein mojood hai ya nahi
+            if roll in text:
+                page_number = page['page']
+                found = True
+                
+                # Us line aur uske aas-paas ka text nikalne ke liye lines split karein
+                lines = [line.strip() for line in text.splitlines() if line.strip()]
+                for idx, line in enumerate(lines):
+                    if roll in line:
+                        # Roll number milne par agle kuch lines ko extract karne ki koshish karein
+                        block_lines = lines[max(0, idx-1):min(len(lines), idx+6)]
+                        matched_block = "\n".join(block_lines)
+                        break
                 break
 
+    # ==========================
+    # DISPLAY RESULT
+    # ==========================
+    if found:
+        st.success("✅ Record found!")
+        st.balloons()
+
+        st.markdown(f"""
+<div class="result-card">
+<h3 style="text-align:center;color:#1565C0;margin-top:0;">📋 GAZETTE RECORD FOUND</h3>
+<hr>
+<p class="info-label">Roll Number</p>
+<p class="info-value">{roll}</p>
+<p class="info-label">Gazette Reference</p>
+<p class="info-value" style="font-size: 16px;">Page {page_number}</p>
+<p class="info-label">Extracted Raw Text Block</p>
+<pre style="background: #fff; padding: 10px; border-radius: 8px; font-size: 14px;">{matched_block}</pre>
+</div>
+""", unsafe_allow_html=True)
+
+        # Share & Copy Logic wese hi rahay gi
+        share_message = f"""🎓 *BISE Gujranwala SSC part II First Annual Examination 2026*
+🎫 *Roll Number:* {roll}
+📄 *Gazette Page:* {page_number}
+
+🔍 Check your result online:
+{APP_URL}
+
+Developed by Sir M. Farhan Iqbal"""
+
+        whatsapp_url = "https://wa.me/?text=" + urllib.parse.quote(share_message)
+
+        st.link_button(
+            "📤 Share on WhatsApp",
+            whatsapp_url,
+            use_container_width=True
+        )
+
+        with st.expander("📋 Copy Result Text"):
+            st.code(share_message, language="markdown")
+
+    else:
+        st.error("❌ No record found for this Roll Number.")
+        st.info("Ensure the roll number is 6 digits long and belongs to the current SSC 2026 examination.")
     # ==========================
     # DISPLAY RESULT
     # ==========================
