@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import urllib.parse
+import re
 
 # ==========================
 # APP SETTINGS
@@ -107,49 +108,45 @@ except Exception as e:
 
 st.divider()
 
-roll = st.text_input(
-    "🔢 Enter your 6-Digit Roll Number below",
+search_query = st.text_input(
+    "🔢 Enter 6-Digit Roll Number or School Code (e.g. 361084)",
     max_chars=6,
-    placeholder="e.g. 531214"
+    placeholder="e.g. 361084"
 )
 
-search_btn = st.button("🔍 Search Result")
+search_btn = st.button("🔍 Search Record")
 
 # ==========================
-# SEARCH LOGIC (Updated & Flexible)
+# SEARCH LOGIC
 # ==========================
 
 if search_btn:
-    roll = roll.strip()
+    query = search_query.strip()
 
-    if not roll:
-        st.warning("Please enter your Roll Number.")
+    if not query:
+        st.warning("Please enter a Roll Number or School Code.")
         st.stop()
 
-    if not (roll.isdigit() and len(roll) == 6):
+    if not (query.isdigit() and len(query) == 6):
         st.error("Invalid input. Please enter exactly 6 digits.")
         st.stop()
 
     found = False
-    student_name = "Not Available in Index Line"
-    student_result = "Check Gazette Page"
     page_number = ""
     matched_block = ""
 
-    with st.spinner("Searching Result..."):
+    with st.spinner("Searching Gazette Database..."):
         for page in pages:
             text = page["text"]
-            # Check karein ke roll number page ke text mein mojood hai ya nahi
-            if roll in text:
+            if query in text:
                 page_number = page['page']
                 found = True
                 
-                # Us line aur uske aas-paas ka text nikalne ke liye lines split karein
+                # Extract surrounding text block for clarity
                 lines = [line.strip() for line in text.splitlines() if line.strip()]
                 for idx, line in enumerate(lines):
-                    if roll in line:
-                        # Roll number milne par agle kuch lines ko extract karne ki koshish karein
-                        block_lines = lines[max(0, idx-1):min(len(lines), idx+6)]
+                    if query in line:
+                        block_lines = lines[max(0, idx-2):min(len(lines), idx+15)]
                         matched_block = "\n".join(block_lines)
                         break
                 break
@@ -158,68 +155,19 @@ if search_btn:
     # DISPLAY RESULT
     # ==========================
     if found:
-        st.success("✅ Record found!")
+        st.success("✅ Record found successfully!")
         st.balloons()
 
         st.markdown(f"""
 <div class="result-card">
 <h3 style="text-align:center;color:#1565C0;margin-top:0;">📋 GAZETTE RECORD FOUND</h3>
 <hr>
-<p class="info-label">Roll Number</p>
-<p class="info-value">{roll}</p>
+<p class="info-label">Searched Query (Roll No / School Code)</p>
+<p class="info-value">{query}</p>
 <p class="info-label">Gazette Reference</p>
 <p class="info-value" style="font-size: 16px;">Page {page_number}</p>
-<p class="info-label">Extracted Raw Text Block</p>
-<pre style="background: #fff; padding: 10px; border-radius: 8px; font-size: 14px;">{matched_block}</pre>
-</div>
-""", unsafe_allow_html=True)
-
-        # Share & Copy Logic wese hi rahay gi
-        share_message = f"""🎓 *BISE Gujranwala SSC part II First Annual Examination 2026*
-🎫 *Roll Number:* {roll}
-📄 *Gazette Page:* {page_number}
-
-🔍 Check your result online:
-{APP_URL}
-
-Developed by Sir M. Farhan Iqbal"""
-
-        whatsapp_url = "https://wa.me/?text=" + urllib.parse.quote(share_message)
-
-        st.link_button(
-            "📤 Share on WhatsApp",
-            whatsapp_url,
-            use_container_width=True
-        )
-
-        with st.expander("📋 Copy Result Text"):
-            st.code(share_message, language="markdown")
-
-    else:
-        st.error("❌ No record found for this Roll Number.")
-        st.info("Ensure the roll number is 6 digits long and belongs to the current SSC 2026 examination.")
-    # ==========================
-    # DISPLAY RESULT
-    # ==========================
-    if found:
-        st.success("✅ Result retrieved successfully!")
-        st.balloons()
-
-        result_color = "red" if "FAIL" in student_result.upper() else "green"
-
-        # Note: Absolutely NO spaces before the HTML tags here to prevent Markdown code-block rendering
-        st.markdown(f"""
-<div class="result-card">
-<h3 style="text-align:center;color:#1565C0;margin-top:0;">📋 OFFICIAL RESULT</h3>
-<hr>
-<p class="info-label">Student Name</p>
-<p class="info-value">{student_name}</p>
-<p class="info-label">Roll Number</p>
-<p class="info-value">{roll}</p>
-<p class="info-label">Marks / Status</p>
-<p class="info-value" style="color:{result_color}; font-size: 28px;">{student_result}</p>
-<p class="info-label">Gazette Reference</p>
-<p class="info-value" style="font-size: 16px;">Page {page_number}</p>
+<p class="info-label">Extracted Text Data</p>
+<pre style="background: #fff; padding: 12px; border-radius: 8px; font-size: 13px; max-height: 300px; overflow-y: auto;">{matched_block}</pre>
 </div>
 """, unsafe_allow_html=True)
 
@@ -228,12 +176,10 @@ Developed by Sir M. Farhan Iqbal"""
         # ==========================
         st.markdown("<br>", unsafe_allow_html=True)
         share_message = f"""🎓 *BISE Gujranwala SSC part II First Annual Examination 2026*
+🎫 *Target ID / Roll No:* {query}
+📄 *Gazette Page:* {page_number}
 
-👤 *Name:* {student_name}
-🎫 *Roll Number:* {roll}
-🏆 *Result:* {student_result}
-
-🔍 Check your result online:
+🔍 Check results online:
 {APP_URL}
 
 Developed by Sir M. Farhan Iqbal"""
@@ -250,8 +196,8 @@ Developed by Sir M. Farhan Iqbal"""
             st.code(share_message, language="markdown")
 
     else:
-        st.error("❌ No record found for this Roll Number.")
-        st.info("Ensure the roll number is 6 digits long and belongs to the current SSC 2026 examination.")
+        st.error("❌ No record found for this number.")
+        st.info("Ensure the entered 6-digit code exists in the current SSC 2026 examination gazette index.")
 
 # ==========================
 # FOOTER
