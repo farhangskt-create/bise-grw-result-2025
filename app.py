@@ -1,7 +1,6 @@
 import streamlit as st
 import json
 import urllib.parse
-import re
 
 # ==========================
 # APP SETTINGS
@@ -108,66 +107,73 @@ except Exception as e:
 
 st.divider()
 
-search_query = st.text_input(
-    "🔢 Enter 6-Digit Roll Number or School Code (e.g. 361084)",
+roll = st.text_input(
+    "🔢 Enter your 6-Digit Roll Number below",
     max_chars=6,
-    placeholder="e.g. 361084"
+    placeholder="e.g. 531214"
 )
 
-search_btn = st.button("🔍 Search Record")
+search_btn = st.button("🔍 Search Result")
 
 # ==========================
 # SEARCH LOGIC
 # ==========================
 
 if search_btn:
-    query = search_query.strip()
+    roll = roll.strip()
 
-    if not query:
-        st.warning("Please enter a Roll Number or School Code.")
+    if not roll:
+        st.warning("Please enter your Roll Number.")
         st.stop()
 
-    if not (query.isdigit() and len(query) == 6):
+    if not (roll.isdigit() and len(roll) == 6):
         st.error("Invalid input. Please enter exactly 6 digits.")
         st.stop()
 
     found = False
+    student_name = ""
+    student_result = ""
     page_number = ""
-    matched_block = ""
 
-    with st.spinner("Searching Gazette Database..."):
+    with st.spinner("Searching Student Record..."):
         for page in pages:
             text = page["text"]
-            if query in text:
+            if roll in text:
                 page_number = page['page']
-                found = True
-                
-                # Extract surrounding text block for clarity
                 lines = [line.strip() for line in text.splitlines() if line.strip()]
-                for idx, line in enumerate(lines):
-                    if query in line:
-                        block_lines = lines[max(0, idx-2):min(len(lines), idx+15)]
-                        matched_block = "\n".join(block_lines)
+                
+                for i in range(len(lines)):
+                    if roll in lines[i]:
+                        if i + 1 < len(lines):
+                            student_name = lines[i + 1]
+                        if i + 2 < len(lines):
+                            student_result = lines[i + 2]
+                        found = True
                         break
-                break
+                if found:
+                    break
 
     # ==========================
-    # DISPLAY RESULT
+    # DISPLAY SINGLE STUDENT RESULT
     # ==========================
     if found:
-        st.success("✅ Record found successfully!")
+        st.success("✅ Student Record Found!")
         st.balloons()
+
+        result_color = "red" if "FAIL" in student_result.upper() else "green"
 
         st.markdown(f"""
 <div class="result-card">
-<h3 style="text-align:center;color:#1565C0;margin-top:0;">📋 GAZETTE RECORD FOUND</h3>
+<h3 style="text-align:center;color:#1565C0;margin-top:0;">📋 STUDENT RESULT CARD</h3>
 <hr>
-<p class="info-label">Searched Query (Roll No / School Code)</p>
-<p class="info-value">{query}</p>
+<p class="info-label">Roll Number</p>
+<p class="info-value">{roll}</p>
+<p class="info-label">Student Name</p>
+<p class="info-value">{student_name}</p>
+<p class="info-label">Marks / Status</p>
+<p class="info-value" style="color:{result_color}; font-size: 26px;">{student_result}</p>
 <p class="info-label">Gazette Reference</p>
 <p class="info-value" style="font-size: 16px;">Page {page_number}</p>
-<p class="info-label">Extracted Text Data</p>
-<pre style="background: #fff; padding: 12px; border-radius: 8px; font-size: 13px; max-height: 300px; overflow-y: auto;">{matched_block}</pre>
 </div>
 """, unsafe_allow_html=True)
 
@@ -176,10 +182,12 @@ if search_btn:
         # ==========================
         st.markdown("<br>", unsafe_allow_html=True)
         share_message = f"""🎓 *BISE Gujranwala SSC part II First Annual Examination 2026*
-🎫 *Target ID / Roll No:* {query}
-📄 *Gazette Page:* {page_number}
 
-🔍 Check results online:
+👤 *Name:* {student_name}
+🎫 *Roll Number:* {roll}
+🏆 *Result / Marks:* {student_result}
+
+🔍 Check result online:
 {APP_URL}
 
 Developed by Sir M. Farhan Iqbal"""
@@ -196,8 +204,8 @@ Developed by Sir M. Farhan Iqbal"""
             st.code(share_message, language="markdown")
 
     else:
-        st.error("❌ No record found for this number.")
-        st.info("Ensure the entered 6-digit code exists in the current SSC 2026 examination gazette index.")
+        st.error("❌ No record found for this Roll Number.")
+        st.info("Ensure the roll number is 6 digits long and belongs to the current SSC 2026 examination.")
 
 # ==========================
 # FOOTER
