@@ -5,7 +5,7 @@ from PIL import Image
 import io
 import urllib.parse
 
-st.set_page_config(page_title="BISE Gujranwala SSC part II First Annual Result 2026", page_icon="🎓", layout="centered")
+st.set_page_config(page_title="BISE Gujranwala SSC part I First Annual Result 2026", page_icon="🎓", layout="centered")
 
 st.markdown("""
 <style>
@@ -50,7 +50,7 @@ if st.button("Search Result"):
         st.image(img, use_container_width=True)
         
         # WhatsApp Share Button
-        whatsapp_text = f"BISE Gujranwala Result 2026\nRoll Number: {match['roll_num']}\nName: {match['name']}"
+        whatsapp_text = f"BISE Gujranwala Result part 1 2026\nRoll Number: {match['roll_num']}\nName: {match['name']}"
         encoded_text = urllib.parse.quote(whatsapp_text)
         whatsapp_url = f"https://api.whatsapp.com/send?text={encoded_text}"
         
